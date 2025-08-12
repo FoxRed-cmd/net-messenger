@@ -15,9 +15,9 @@ namespace AuthService.Repositories
             return result.Entity;
         }
 
-        public async Task<User> GetByEmailAsync(string email)
+        public async Task<User?> GetByEmailAsync(string email)
         {
-            return await context.Users.FirstOrDefaultAsync(u => u.Email == email) ?? throw new EntityNotFoundException("User not found");
+            return await context.Users.FirstOrDefaultAsync(u => u.Email == email);
         }
 
         public async Task<User> GetByIdAsync(Guid id)

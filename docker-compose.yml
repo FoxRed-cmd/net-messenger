@@ -1,0 +1,13 @@
+version: "4.4"
+
+services:
+    rabbitmq:
+        image: rabbitmq:management
+        container_name: rabbitmq
+        ports:
+            - "5673:5672" # порт для приложений
+            - "15672:15672" # порт для веб-панели
+        environment:
+            RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+            RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+        env_file: .env
