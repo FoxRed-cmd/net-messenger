@@ -1,3 +1,4 @@
+using AuthService.Entities.DTO;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AuthService.Controllers
@@ -7,9 +8,9 @@ namespace AuthService.Controllers
     public class AuthController : ControllerBase
     {
         [HttpPost("register")]
-        public IResult Register()
+        public IResult Register(RegisterRequestDto registerRequestDto)
         {
-            return Results.Ok("User registered successfully");
+            return Results.Ok();
         }
     }
 }
