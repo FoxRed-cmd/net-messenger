@@ -1,8 +1,11 @@
+using System.Security.Cryptography;
+using System.Text;
 using AuthService.Entities;
 using AuthService.Entities.DTO;
 using AuthService.Entities.Enums;
 using AuthService.Exceptions;
 using AuthService.Repositories;
+using AuthService.Utils;
 
 namespace AuthService.Services
 {
@@ -22,13 +25,17 @@ namespace AuthService.Services
             if (user != null)
                 throw new UserAlreadyExistException("User already exist");
 
-            //TODO: hash password
+            var (hashBase64, saltBase64) = PasswordHasher.HashPassword(
+                Encoding.UTF8.GetBytes(registerRequestDto.Password),
+                HashAlgorithmName.SHA256
+            );
+
             user = new User()
             {
                 Id = Guid.NewGuid(),
                 Email = registerRequestDto.Email,
-                Password = registerRequestDto.Password,
-                Salt = "",
+                Password = hashBase64,
+                Salt = saltBase64,
                 Role = Role.USER,
                 CreatedAt = DateTime.UtcNow
             };
