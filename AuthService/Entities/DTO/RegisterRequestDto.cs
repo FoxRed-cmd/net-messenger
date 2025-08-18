@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using AuthService.Utils;
 
 namespace AuthService.Entities.DTO
 {
@@ -7,8 +8,8 @@ namespace AuthService.Entities.DTO
         [Required]
         [EmailAddress(ErrorMessage = "Invalid email address")]
         public required string Email { get; init; }
-        [Required]
-        [MinLength(12, ErrorMessage = "Password must be at least 12 characters")]
+
+        [PasswordValidate]
         public required string Password { get; init; }
     }
 }
