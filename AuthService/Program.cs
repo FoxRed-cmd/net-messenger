@@ -1,11 +1,15 @@
 using AuthService.Configs;
 using AuthService.Data;
+using AuthService.Middleware;
 using AuthService.Repositories;
 using AuthService.Services;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddJwtAuthentication(builder.Configuration);
+builder.Services.AddAuthorization();
 
 builder.Services.AddControllers();
 
@@ -18,13 +22,18 @@ builder.Services.AddDbContext<AuthDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("AuthDb"));
 });
 
-builder.Services.Configure<RabbitMqConfig>(builder.Configuration.GetSection("RabbitMq"));
+builder.Services.Configure<RabbitMqSettings>(builder.Configuration.GetSection("RabbitMq"));
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IRabbitMqProducerService, RabbitMqProducerService>();
 builder.Services.AddScoped<IAuthService, AuthService.Services.AuthService>();
 
 var app = builder.Build();
+
+app.UseErrorHandlingMiddleware();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -36,6 +45,5 @@ if (app.Environment.IsDevelopment())
 app.MapControllers();
 
 app.UseHttpsRedirection();
-
 
 app.Run();

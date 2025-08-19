@@ -1,9 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 using AuthService.Configs;
 using AuthService.Entities.DTO;
 using Microsoft.Extensions.Options;
@@ -11,12 +7,12 @@ using RabbitMQ.Client;
 
 namespace AuthService.Services
 {
-    public class RabbitMqProducerService(IOptions<RabbitMqConfig> rabbitMqConfig) : IRabbitMqProducerService
+    public class RabbitMqProducerService(IOptions<RabbitMqSettings> rabbitMqConfig) : IRabbitMqProducerService
     {
         private const string EXCHANGE_FOR_USER_EVENTS = "user.events";
         private const string ROUTE_FOR_REGISTERED = "user.registered";
 
-        private readonly RabbitMqConfig rabbitMqConfig = rabbitMqConfig.Value;
+        private readonly RabbitMqSettings rabbitMqConfig = rabbitMqConfig.Value;
 
         public async Task PublishUserRegisteredAsync(UserRegisteredEvent evt)
         {

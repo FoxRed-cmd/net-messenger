@@ -1,7 +1,4 @@
 namespace AuthService.Entities.DTO
 {
-    public class LoginRequestDto
-    {
-
-    }
+    public class LoginRequestDto : RegisterRequestDto;
 }

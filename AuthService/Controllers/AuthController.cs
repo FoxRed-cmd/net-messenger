@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using AuthService.Entities.DTO;
 using AuthService.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -15,6 +14,13 @@ namespace AuthService.Controllers
         {
             await authService.RegisterAsync(registerRequestDto);
             return Results.Ok("User registered successfully");
+        }
+
+        [HttpPost("login")]
+        public async Task<IResult> Login(LoginRequestDto loginRequestDto)
+        {
+            var loginResponse = await authService.LoginAsync(loginRequestDto);
+            return Results.Json(loginResponse, statusCode: 200);
         }
     }
 }

@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using System.Text;
 
 namespace AuthService.Utils
 {
@@ -35,6 +36,11 @@ namespace AuthService.Utils
         {
             var hash = HashPassword(password, salt, algorithm);
             return CryptographicOperations.FixedTimeEquals(hash, expectedHash);
+        }
+
+        public static bool VerifyPassword(string password, string salt, string expectedHash, HashAlgorithmName algorithm)
+        {
+            return VerifyPassword(Encoding.UTF8.GetBytes(password), Convert.FromBase64String(salt), Convert.FromBase64String(expectedHash), algorithm);
         }
     }
 }

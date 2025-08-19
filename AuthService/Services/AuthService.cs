@@ -1,22 +1,39 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using AuthService.Configs;
 using AuthService.Entities;
 using AuthService.Entities.DTO;
 using AuthService.Entities.Enums;
 using AuthService.Exceptions;
 using AuthService.Repositories;
 using AuthService.Utils;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 
 namespace AuthService.Services
 {
-    public class AuthService(IUserRepository userRepository, IRabbitMqProducerService rabbitMqProducerService) : IAuthService
+    public class AuthService(IUserRepository userRepository, IRabbitMqProducerService rabbitMqProducerService, IOptions<JwtSettings> jwtOptions) : IAuthService
     {
         private readonly IUserRepository userRepository = userRepository;
         private readonly IRabbitMqProducerService rabbitMqProducerService = rabbitMqProducerService;
+        private readonly IOptions<JwtSettings> jwtOptions = jwtOptions;
         private bool disposed = false;
-        public Task<AuthResponseDto> LoginAsync(LoginRequestDto loginRequestDto)
+        public async Task<AuthResponseDto> LoginAsync(LoginRequestDto loginRequestDto)
         {
-            throw new NotImplementedException();
+            var user = await userRepository.GetByEmailAsync(loginRequestDto.Email) ??
+                throw new IncorrectLoginOrPasswordException("Incorrect login or password");
+
+            if (!PasswordHasher.VerifyPassword(loginRequestDto.Password, user.Salt, user.Password, HashAlgorithmName.SHA256))
+                throw new IncorrectLoginOrPasswordException("Incorrect login or password");
+
+            // TODO: add logic for refresh token
+            return new AuthResponseDto()
+            {
+                AccessToken = GenerateJwtToken(user),
+                RefreshToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64))
+            };
         }
 
         public async Task RegisterAsync(RegisterRequestDto registerRequestDto)
@@ -49,6 +66,30 @@ namespace AuthService.Services
                 Id = user.Id,
                 Email = user.Email
             });
+        }
+
+        private string GenerateJwtToken(User user)
+        {
+            var claims = new[]
+            {
+                new Claim(ClaimTypes.Name, user.Email),
+                new Claim(ClaimTypes.Role, user.Role.ToString())
+            };
+
+            var creds = new SigningCredentials(
+                jwtOptions.Value.GetSymmetricSecurityKey(),
+                SecurityAlgorithms.HmacSha256
+            );
+
+            var token = new JwtSecurityToken(
+                issuer: jwtOptions.Value.Issuer,
+                audience: jwtOptions.Value.Audience,
+                claims: claims,
+                expires: DateTime.UtcNow.AddMinutes(jwtOptions.Value.ExpiryMinutes),
+                signingCredentials: creds
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
         public void Dispose(bool disposing)
