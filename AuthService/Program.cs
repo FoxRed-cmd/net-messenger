@@ -22,8 +22,10 @@ builder.Services.Configure<RabbitMqSettings>(builder.Configuration.GetSection("R
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ITokenRepository, TokenRepository>();
-builder.Services.AddScoped<IRabbitMqProducerService, RabbitMqProducerService>();
+builder.Services.AddSingleton<IRabbitMqProducerService, RabbitMqProducerService>();
 builder.Services.AddScoped<IAuthService, AuthService.Services.AuthService>();
+
+builder.Services.AddHostedService(sp => (RabbitMqProducerService)sp.GetRequiredService<IRabbitMqProducerService>());
 
 var app = builder.Build();
 

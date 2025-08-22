@@ -13,8 +13,10 @@ namespace AuthService.Services
         private const string ROUTE_FOR_REGISTERED = "user.registered";
 
         private readonly RabbitMqSettings rabbitMqConfig = rabbitMqConfig.Value;
+        private IConnection connection = null!;
+        private IChannel channel = null!;
 
-        public async Task PublishUserRegisteredAsync(UserRegisteredEvent evt)
+        public async Task StartAsync(CancellationToken cancellationToken)
         {
             var factory = new ConnectionFactory
             {
@@ -24,15 +26,25 @@ namespace AuthService.Services
                 Port = rabbitMqConfig.Port
             };
 
-            using var connection = await factory.CreateConnectionAsync();
-            using var channel = await connection.CreateChannelAsync();
+            connection = await factory.CreateConnectionAsync(cancellationToken);
+            channel = await connection.CreateChannelAsync(cancellationToken: cancellationToken);
 
             await channel.ExchangeDeclareAsync(
                 exchange: EXCHANGE_FOR_USER_EVENTS,
                 type: ExchangeType.Topic,
-                durable: true
+                durable: true,
+                cancellationToken: cancellationToken
             );
+        }
 
+        public async Task StopAsync(CancellationToken cancellationToken)
+        {
+            if (channel != null) await channel.CloseAsync(cancellationToken: cancellationToken);
+            if (connection != null) await connection.CloseAsync(cancellationToken: cancellationToken);
+        }
+
+        public async Task PublishUserRegisteredAsync(UserRegisteredEvent evt)
+        {
             var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(evt));
 
             await channel.BasicPublishAsync(
@@ -42,9 +54,10 @@ namespace AuthService.Services
             );
         }
 
-        public void Dispose()
+        public async ValueTask DisposeAsync()
         {
-
+            if (channel != null) await channel.DisposeAsync();
+            if (connection != null) await connection.DisposeAsync();
         }
     }
 }
