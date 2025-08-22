@@ -77,6 +77,34 @@ namespace AuthService.Services
             });
         }
 
+        public async Task<AuthResponseDto> RefreshAsync(string token)
+        {
+            if (string.IsNullOrEmpty(token))
+                throw new SecurityTokenException("No refresh token provided");
+
+            var refreshToken = await tokenRepository.GetByTokenAsync(token) ??
+                throw new SecurityTokenException("Invalid refresh token provided");
+
+            if (refreshToken.IsUsed || refreshToken.IsRevoked)
+                throw new SecurityTokenException("Invalid refresh token provided");
+
+            var user = refreshToken.User ??
+                throw new SecurityTokenException("Invalid refresh token provided");
+
+            refreshToken.IsUsed = true;
+            tokenRepository.Update(refreshToken);
+            
+            refreshToken = await tokenRepository.CreateAsync(GenerateRefreshToken(user));
+            await tokenRepository.SaveAsync();
+
+            return new AuthResponseDto()
+            {
+                AccessToken = GenerateJwtToken(user),
+                RefreshToken = refreshToken.Token,
+                RefreshTokenExpiration = refreshToken.Expires
+            };
+        }
+
         private string GenerateJwtToken(User user)
         {
             var claims = new[]

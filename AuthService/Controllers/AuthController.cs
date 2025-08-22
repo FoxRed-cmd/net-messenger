@@ -31,5 +31,30 @@ namespace AuthService.Controllers
 
             return Results.Json(new { accessToken = loginResponse.AccessToken }, statusCode: 200);
         }
+
+        [HttpPost("refresh")]
+        public async Task<IResult> Refresh()
+        {
+            AuthResponseDto loginResponse;
+            if (Request.Cookies.TryGetValue(nameof(loginResponse.RefreshToken).ToUpper(), out var refreshToken))
+            {
+                loginResponse = await authService.RefreshAsync(refreshToken);
+                Response.Cookies.Append(nameof(loginResponse.RefreshToken).ToUpper(), loginResponse.RefreshToken, new()
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.None,
+                    Expires = loginResponse.RefreshTokenExpiration
+                });
+
+                return Results.Json(new { accessToken = loginResponse.AccessToken }, statusCode: 200);
+            }
+
+            return Results.Json(new
+            {
+                error = "Invalid refresh token provided",
+                status = StatusCodes.Status401Unauthorized
+            }, statusCode: 401);
+        }
     }
 }
