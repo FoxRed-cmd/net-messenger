@@ -20,7 +20,16 @@ namespace AuthService.Controllers
         public async Task<IResult> Login(LoginRequestDto loginRequestDto)
         {
             var loginResponse = await authService.LoginAsync(loginRequestDto);
-            return Results.Json(loginResponse, statusCode: 200);
+
+            Response.Cookies.Append(nameof(loginResponse.RefreshToken).ToUpper(), loginResponse.RefreshToken, new()
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Expires = loginResponse.RefreshTokenExpiration
+            });
+
+            return Results.Json(new { accessToken = loginResponse.AccessToken }, statusCode: 200);
         }
     }
 }

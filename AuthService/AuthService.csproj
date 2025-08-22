@@ -17,6 +17,7 @@
     <PackageReference Include="Scalar.AspNetCore" Version="2.6.9" />
     <PackageReference Include="RabbitMQ.Client" Version="7.1.2" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Proxies" Version="9.0.8" />
   </ItemGroup>
 
 </Project>

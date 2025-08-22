@@ -13,6 +13,7 @@ namespace AuthSrvice.Tests.Services
     public class AuthServiceTest
     {
         private readonly Mock<IUserRepository> userRepositoryMock = new();
+        private readonly Mock<ITokenRepository> mockTokenRepositoryMock = new();
         private readonly Mock<IRabbitMqProducerService> producerServiceMock = new();
         private readonly Mock<IOptions<JwtSettings>> jwtSettingsMock = new();
 
@@ -20,7 +21,11 @@ namespace AuthSrvice.Tests.Services
 
         public AuthServiceTest()
         {
-            authService = new AuthService.Services.AuthService(userRepositoryMock.Object, producerServiceMock.Object, jwtSettingsMock.Object);
+            authService = new AuthService.Services.AuthService(
+                userRepositoryMock.Object,
+                mockTokenRepositoryMock.Object,
+                producerServiceMock.Object,
+                jwtSettingsMock.Object);
         }
         [Fact]
         public async Task RegisterAsync_ShouldCreateUser_WhenUserDoesNotExist()

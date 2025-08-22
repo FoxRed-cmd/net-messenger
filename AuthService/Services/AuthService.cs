@@ -14,9 +14,14 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace AuthService.Services
 {
-    public class AuthService(IUserRepository userRepository, IRabbitMqProducerService rabbitMqProducerService, IOptions<JwtSettings> jwtOptions) : IAuthService
+    public class AuthService(
+        IUserRepository userRepository,
+        ITokenRepository tokenRepository,
+        IRabbitMqProducerService rabbitMqProducerService,
+        IOptions<JwtSettings> jwtOptions) : IAuthService
     {
         private readonly IUserRepository userRepository = userRepository;
+        private readonly ITokenRepository tokenRepository = tokenRepository;
         private readonly IRabbitMqProducerService rabbitMqProducerService = rabbitMqProducerService;
         private readonly IOptions<JwtSettings> jwtOptions = jwtOptions;
         private bool disposed = false;
@@ -28,11 +33,15 @@ namespace AuthService.Services
             if (!PasswordHasher.VerifyPassword(loginRequestDto.Password, user.Salt, user.Password, HashAlgorithmName.SHA256))
                 throw new IncorrectLoginOrPasswordException("Incorrect login or password");
 
-            // TODO: add logic for refresh token
+            var refreshToken = await tokenRepository.CreateAsync(GenerateRefreshToken(user));
+            await tokenRepository.SaveAsync();
+
+
             return new AuthResponseDto()
             {
                 AccessToken = GenerateJwtToken(user),
-                RefreshToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64))
+                RefreshToken = refreshToken.Token,
+                RefreshTokenExpiration = refreshToken.Expires
             };
         }
 
@@ -90,6 +99,21 @@ namespace AuthService.Services
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        private RefreshToken GenerateRefreshToken(User user)
+        {
+            var refreshToken = new RefreshToken()
+            {
+                Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)),
+                UserId = user.Id,
+                // TODO: add getting expires from config
+                Expires = DateTime.UtcNow.AddDays(30),
+                IsRevoked = false,
+                IsUsed = false
+            };
+
+            return refreshToken;
         }
 
         public void Dispose(bool disposing)

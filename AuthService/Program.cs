@@ -3,7 +3,6 @@ using AuthService.Data;
 using AuthService.Middleware;
 using AuthService.Repositories;
 using AuthService.Services;
-using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,14 +16,12 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
-builder.Services.AddDbContext<AuthDbContext>(options =>
-{
-    options.UseNpgsql(builder.Configuration.GetConnectionString("AuthDb"));
-});
+builder.Services.AddDbContext<AuthDbContext>();
 
 builder.Services.Configure<RabbitMqSettings>(builder.Configuration.GetSection("RabbitMq"));
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<ITokenRepository, TokenRepository>();
 builder.Services.AddScoped<IRabbitMqProducerService, RabbitMqProducerService>();
 builder.Services.AddScoped<IAuthService, AuthService.Services.AuthService>();
 
