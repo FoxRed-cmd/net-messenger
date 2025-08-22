@@ -4,6 +4,12 @@
     <img alt="Static Badge" src="https://img.shields.io/badge/.NET-9.0-4E2ACD">
 </p>
 
+## Add new project to solution
+
+```PowerShell
+dotnet sln add .\Project\Project.csproj
+```
+
 ## Init and set user secrets
 
 Location: %APPDATA%\Microsoft\UserSecrets\<user_secrets_id>\secrets.json
