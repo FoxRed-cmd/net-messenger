@@ -86,14 +86,17 @@ namespace AuthService.Services
                 throw new SecurityTokenException("Invalid refresh token provided");
 
             if (refreshToken.IsUsed || refreshToken.IsRevoked)
-                throw new SecurityTokenException("Invalid refresh token provided");
+                throw new SecurityTokenException("Invalid refresh is used or revoked");
+
+            if (refreshToken.Expires < DateTime.UtcNow)
+                throw new SecurityTokenException("Refresh token expired");
 
             var user = refreshToken.User ??
                 throw new SecurityTokenException("Invalid refresh token provided");
 
             refreshToken.IsUsed = true;
             tokenRepository.Update(refreshToken);
-            
+
             refreshToken = await tokenRepository.CreateAsync(GenerateRefreshToken(user));
             await tokenRepository.SaveAsync();
 
