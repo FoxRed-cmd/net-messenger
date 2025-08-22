@@ -35,10 +35,9 @@ namespace AuthService.Controllers
         [HttpPost("refresh")]
         public async Task<IResult> Refresh()
         {
-            AuthResponseDto loginResponse;
-            if (Request.Cookies.TryGetValue(nameof(loginResponse.RefreshToken).ToUpper(), out var refreshToken))
+            if (Request.Cookies.TryGetValue(nameof(AuthResponseDto.RefreshToken).ToUpper(), out var refreshToken))
             {
-                loginResponse = await authService.RefreshAsync(refreshToken);
+                var loginResponse = await authService.RefreshAsync(refreshToken);
                 Response.Cookies.Append(nameof(loginResponse.RefreshToken).ToUpper(), loginResponse.RefreshToken, new()
                 {
                     HttpOnly = true,
@@ -55,6 +54,13 @@ namespace AuthService.Controllers
                 error = "Invalid refresh token provided",
                 status = StatusCodes.Status401Unauthorized
             }, statusCode: 401);
+        }
+
+        [HttpPost("logout")]
+        public IResult Logout()
+        {
+            Response.Cookies.Delete(nameof(AuthResponseDto.RefreshToken).ToUpper());
+            return Results.Ok("User logged out successfully");
         }
     }
 }
