@@ -11,6 +11,12 @@ namespace ProfileService.Repositories
         {
             await dbSet.AddAsync(entity);
         }
+
+        public async Task<T?> GetByIdAsync(U id)
+        {
+            return await dbSet.FindAsync(id);
+        }
+
         public async Task SaveAsync() => await context.SaveChangesAsync();
     }
 }

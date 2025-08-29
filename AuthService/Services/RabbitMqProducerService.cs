@@ -58,6 +58,7 @@ namespace AuthService.Services
         {
             if (channel != null) await channel.DisposeAsync();
             if (connection != null) await connection.DisposeAsync();
+            GC.SuppressFinalize(this);
         }
     }
 }
