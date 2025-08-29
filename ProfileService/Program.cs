@@ -1,4 +1,6 @@
 using ProfileService.Configs;
+using ProfileService.Data;
+using ProfileService.Repositories;
 using ProfileService.Services;
 using Scalar.AspNetCore;
 
@@ -9,6 +11,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();
 
 builder.Services.Configure<RabbitMqSettings>(builder.Configuration.GetSection("RabbitMq"));
+
+builder.Services.AddDbContext<ProfileDbContext>();
+
+builder.Services.AddScoped(typeof(ICrudRepository<,>), typeof(CrudRepository<,>));
+builder.Services.AddScoped<IProfileRepository, ProfileRepository>();
+builder.Services.AddSingleton<IProfileService, ProfileService.Services.ProfileService>();
 
 builder.Services.AddHostedService<RabbitMqConsumerService>();
 

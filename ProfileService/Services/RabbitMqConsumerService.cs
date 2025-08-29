@@ -3,19 +3,24 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Options;
 using ProfileService.Configs;
+using ProfileService.Entities;
 using ProfileService.Entities.DTO;
+using ProfileService.Repositories;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
 namespace ProfileService.Services
 {
-    public class RabbitMqConsumerService(IOptions<RabbitMqSettings> rabbitMqConfig) : BackgroundService
+    public class RabbitMqConsumerService(
+        IOptions<RabbitMqSettings> rabbitMqConfig,
+        IProfileService profileService) : BackgroundService
     {
         private const string EXCHANGE_FOR_USER_EVENTS = "user.events";
         private const string ROUTE_FOR_REGISTERED = "user.registered";
         private const string QUEUE_FOR_REGISTERED = "user.registered.queue";
 
         private readonly RabbitMqSettings rabbitMqConfig = rabbitMqConfig.Value;
+        private readonly IProfileService profileService = profileService;
         private IConnection? connection;
         private IChannel? channel;
 
@@ -54,10 +59,7 @@ namespace ProfileService.Services
                     var message = Encoding.UTF8.GetString(body);
                     var evt = JsonSerializer.Deserialize<UserRegisteredEvent>(message);
 
-                    Console.WriteLine($"[Consumer] Received user registered: {evt?.Id}");
-
-                    // тут можешь вызвать доменный сервис, сохранить в БД и т.п.
-                    // await _userService.HandleUserRegisteredAsync(evt);
+                    await profileService.CreateProfileAsync(evt ?? throw new(nameof(evt)));
 
                     // подтверждаем что сообщение обработано
                     await channel.BasicAckAsync(ea.DeliveryTag, multiple: false);
@@ -76,6 +78,7 @@ namespace ProfileService.Services
                 autoAck: false,
                 consumer: consumer,
                 cancellationToken: stoppingToken
+
             );
 
             // держим consumer живым пока сервис работает
