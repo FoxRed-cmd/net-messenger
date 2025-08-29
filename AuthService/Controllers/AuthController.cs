@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using AuthService.Entities.DTO;
 using AuthService.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -57,9 +58,13 @@ namespace AuthService.Controllers
         }
 
         [HttpPost("logout")]
-        public IResult Logout()
+        public async Task<IResult> Logout()
         {
-            Response.Cookies.Delete(nameof(AuthResponseDto.RefreshToken).ToUpper());
+            if (Request.Cookies.TryGetValue(nameof(AuthResponseDto.RefreshToken).ToUpper(), out var refreshToken))
+            {
+                await authService.LogoutAsync(refreshToken);
+                Response.Cookies.Delete(nameof(AuthResponseDto.RefreshToken).ToUpper());
+            }
             return Results.Ok("User logged out successfully");
         }
     }

@@ -6,6 +6,8 @@ using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddJwtAuthentication(builder.Configuration);
+builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 
 // Add services to the container.
@@ -23,6 +25,9 @@ builder.Services.AddSingleton<IProfileService, ProfileService.Services.ProfileSe
 builder.Services.AddHostedService<RabbitMqConsumerService>();
 
 var app = builder.Build();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

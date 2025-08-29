@@ -77,6 +77,17 @@ namespace AuthService.Services
             });
         }
 
+        public async Task LogoutAsync(string token)
+        {
+            var refreshToken = await tokenRepository.GetByTokenAsync(token) ??
+                throw new SecurityTokenException("Invalid refresh token provided");
+
+            refreshToken.IsRevoked = true;
+            tokenRepository.Update(refreshToken);
+
+            await tokenRepository.SaveAsync();
+        }
+
         public async Task<AuthResponseDto> RefreshAsync(string token)
         {
             if (string.IsNullOrEmpty(token))

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ProfileService.Controllers
@@ -7,6 +8,8 @@ namespace ProfileService.Controllers
     public class ProfileController(ProfileService.Services.IProfileService profileService)
     {
         private readonly ProfileService.Services.IProfileService profileService = profileService;
+
+        [Authorize]
         [HttpGet("find")]
         public async Task<IResult> Find([FromQuery] string query)
         {
