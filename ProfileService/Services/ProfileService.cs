@@ -13,9 +13,10 @@ namespace ProfileService.Services
             var profileRepository = scope.ServiceProvider.GetRequiredService<IProfileRepository>();
 
             var tempName = string.Format("user_{0}", Random.Shared.Next(0, int.MaxValue));
-            var tempUserName = evt.Email.Split("@").First();
+            var halfMails = evt.Email.Split("@");
+            var tempUserName = $"@{halfMails.First()}_{halfMails.Last()}";
 
-            var profile = new Profile()
+            await profileRepository.CreateAsync(new Profile()
             {
                 Id = evt!.Id,
                 FirstName = tempName,
@@ -27,9 +28,7 @@ namespace ProfileService.Services
                 CreatedAt = DateTime.UtcNow,
                 LastVisit = DateTime.UtcNow,
                 StatusOnline = true
-            };
-
-            await profileRepository.CreateAsync(profile);
+            });
             await profileRepository.SaveAsync();
         }
 
