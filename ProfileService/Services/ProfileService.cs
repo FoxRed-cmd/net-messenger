@@ -1,3 +1,4 @@
+using Mapster;
 using ProfileService.Entities;
 using ProfileService.Entities.DTO;
 using ProfileService.Repositories;
@@ -39,18 +40,7 @@ namespace ProfileService.Services
 
             var profile = await profileRepository.GetByIdAsync(id) ?? throw new Exception("Profile not found");
 
-            return new ProfileDto()
-            {
-                Id = profile.Id,
-                FullName = profile.FullName.Trim(),
-                Email = profile.Email,
-                UserName = profile.UserName,
-                AvatarUrl = profile.AvatarUrl,
-                Status = profile.Status,
-                CreatedAt = profile.CreatedAt,
-                LastVisit = profile.LastVisit,
-                StatusOnline = profile.StatusOnline,
-            };
+            return profile.Adapt<ProfileDto>();
         }
 
         public async Task<IEnumerable<ProfileDto>> FindProfileAsync(string query)
@@ -63,18 +53,20 @@ namespace ProfileService.Services
 
             var profiles = await profileRepository.FindAsync(query);
 
-            return [.. profiles.Select(p => new ProfileDto()
-            {
-                Id = p.Id,
-                FullName = p.FullName.Trim(),
-                Email = p.Email,
-                UserName = p.UserName,
-                AvatarUrl = p.AvatarUrl,
-                Status = p.Status,
-                CreatedAt = p.CreatedAt,
-                LastVisit = p.LastVisit,
-                StatusOnline = p.StatusOnline,
-            })];
+            return [.. profiles.Select(p => p.Adapt<ProfileDto>())];
+        }
+
+        public async Task<ProfileDto> GetProfileByUserNameAsync(string userName)
+        {
+            if (string.IsNullOrEmpty(userName))
+                throw new Exception("Username is empty");
+
+            using var scope = scopeFactory.CreateScope();
+            var profileRepository = scope.ServiceProvider.GetRequiredService<IProfileRepository>();
+
+            var profile = await profileRepository.GetByUserNameAsync(userName);
+
+            return profile.Adapt<ProfileDto>();
         }
     }
 }

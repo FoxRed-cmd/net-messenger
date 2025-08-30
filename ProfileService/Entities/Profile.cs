@@ -17,7 +17,7 @@ namespace ProfileService.Entities
         public string? LastName { get; set; }
 
         [NotMapped]
-        public string FullName { get => $"{FirstName} {LastName}"; }
+        public string FullName { get => $"{FirstName} {LastName}".Trim(); }
 
         [Required]
         [Column("email")]

@@ -16,5 +16,13 @@ namespace ProfileService.Controllers
             var profiles = await profileService.FindProfileAsync(query);
             return Results.Json(profiles, statusCode: 200);
         }
+
+        [Authorize]
+        [HttpGet("{userName}")]
+        public async Task<IResult> GetProfileByUserName([FromRoute] string userName)
+        {
+            var profile = await profileService.GetProfileByUserNameAsync(userName);
+            return Results.Json(profile, statusCode: 200);
+        }
     }
 }
