@@ -22,49 +22,21 @@ namespace AuthService.Controllers
         {
             var loginResponse = await authService.LoginAsync(loginRequestDto);
 
-            Response.Cookies.Append(nameof(loginResponse.RefreshToken).ToUpper(), loginResponse.RefreshToken, new()
-            {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.None,
-                Expires = loginResponse.RefreshTokenExpiration
-            });
-
             return Results.Json(new { accessToken = loginResponse.AccessToken }, statusCode: 200);
         }
 
         [HttpPost("refresh")]
         public async Task<IResult> Refresh()
         {
-            if (Request.Cookies.TryGetValue(nameof(AuthResponseDto.RefreshToken).ToUpper(), out var refreshToken))
-            {
-                var loginResponse = await authService.RefreshAsync(refreshToken);
-                Response.Cookies.Append(nameof(loginResponse.RefreshToken).ToUpper(), loginResponse.RefreshToken, new()
-                {
-                    HttpOnly = true,
-                    Secure = true,
-                    SameSite = SameSiteMode.None,
-                    Expires = loginResponse.RefreshTokenExpiration
-                });
+            var loginResponse = await authService.RefreshAsync();
 
-                return Results.Json(new { accessToken = loginResponse.AccessToken }, statusCode: 200);
-            }
-
-            return Results.Json(new
-            {
-                error = "Invalid refresh token provided",
-                status = StatusCodes.Status401Unauthorized
-            }, statusCode: 401);
+            return Results.Json(new { accessToken = loginResponse.AccessToken }, statusCode: 200);
         }
 
         [HttpPost("logout")]
         public async Task<IResult> Logout()
         {
-            if (Request.Cookies.TryGetValue(nameof(AuthResponseDto.RefreshToken).ToUpper(), out var refreshToken))
-            {
-                await authService.LogoutAsync(refreshToken);
-                Response.Cookies.Delete(nameof(AuthResponseDto.RefreshToken).ToUpper());
-            }
+            await authService.LogoutAsync();
             return Results.Ok("User logged out successfully");
         }
     }

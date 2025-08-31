@@ -8,6 +8,7 @@ using AuthService.Exceptions;
 using AuthService.Repositories;
 using AuthService.Services;
 using AuthService.Utils;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Moq;
@@ -20,6 +21,7 @@ namespace AuthSrvice.Tests.Services
         private readonly Mock<ITokenRepository> tokenRepositoryMock = new();
         private readonly Mock<IRabbitMqProducerService> producerServiceMock = new();
         private readonly Mock<IOptions<JwtSettings>> jwtSettingsMock = new();
+        private readonly Mock<IHttpContextAccessor> httpContextAccessor = new();
 
         private readonly AuthService.Services.AuthService authService;
 
@@ -29,7 +31,8 @@ namespace AuthSrvice.Tests.Services
                 userRepositoryMock.Object,
                 tokenRepositoryMock.Object,
                 producerServiceMock.Object,
-                jwtSettingsMock.Object);
+                jwtSettingsMock.Object,
+                httpContextAccessor.Object);
         }
         [Fact]
         public async Task RegisterAsync_ShouldCreateUser_WhenUserDoesNotExist()
@@ -143,7 +146,7 @@ namespace AuthSrvice.Tests.Services
 
             tokenRepositoryMock.Setup(t => t.GetByTokenAsync(refreshToken)).ReturnsAsync(null as RefreshToken);
 
-            await Assert.ThrowsAsync<SecurityTokenException>(() => authService.RefreshAsync(refreshToken));
+            await Assert.ThrowsAsync<SecurityTokenException>(() => authService.RefreshAsync());
         }
 
         [Fact]
@@ -153,7 +156,7 @@ namespace AuthSrvice.Tests.Services
 
             tokenRepositoryMock.Setup(t => t.GetByTokenAsync(refreshToken)).ReturnsAsync(null as RefreshToken);
 
-            await Assert.ThrowsAsync<SecurityTokenException>(() => authService.RefreshAsync(refreshToken));
+            await Assert.ThrowsAsync<SecurityTokenException>(() => authService.RefreshAsync());
         }
 
         [Fact]
@@ -172,7 +175,7 @@ namespace AuthSrvice.Tests.Services
                 User = null
             });
 
-            await Assert.ThrowsAsync<SecurityTokenException>(() => authService.RefreshAsync(refreshToken));
+            await Assert.ThrowsAsync<SecurityTokenException>(() => authService.RefreshAsync());
         }
 
         [Fact]
@@ -191,7 +194,7 @@ namespace AuthSrvice.Tests.Services
                 User = user
             });
 
-            await Assert.ThrowsAsync<SecurityTokenException>(() => authService.RefreshAsync(refreshToken));
+            await Assert.ThrowsAsync<SecurityTokenException>(() => authService.RefreshAsync());
         }
 
         [Fact]
@@ -210,7 +213,7 @@ namespace AuthSrvice.Tests.Services
                 User = user
             });
 
-            await Assert.ThrowsAsync<SecurityTokenException>(() => authService.RefreshAsync(refreshToken));
+            await Assert.ThrowsAsync<SecurityTokenException>(() => authService.RefreshAsync());
 
             tokenRepositoryMock.Setup(t => t.GetByTokenAsync(refreshToken)).ReturnsAsync(new RefreshToken()
             {
@@ -222,7 +225,7 @@ namespace AuthSrvice.Tests.Services
                 User = user
             });
 
-            await Assert.ThrowsAsync<SecurityTokenException>(() => authService.RefreshAsync(refreshToken));
+            await Assert.ThrowsAsync<SecurityTokenException>(() => authService.RefreshAsync());
 
             tokenRepositoryMock.Setup(t => t.GetByTokenAsync(refreshToken)).ReturnsAsync(new RefreshToken()
             {
@@ -234,7 +237,7 @@ namespace AuthSrvice.Tests.Services
                 User = user
             });
 
-            await Assert.ThrowsAsync<SecurityTokenException>(() => authService.RefreshAsync(refreshToken));
+            await Assert.ThrowsAsync<SecurityTokenException>(() => authService.RefreshAsync());
         }
 
         [Fact]
@@ -266,7 +269,7 @@ namespace AuthSrvice.Tests.Services
                     Expires = DateTime.UtcNow.AddDays(30)
                 });
 
-            var result = await authService.RefreshAsync(refreshToken);
+            var result = await authService.RefreshAsync();
 
             Assert.False(string.IsNullOrEmpty(result.AccessToken));
             Assert.False(string.IsNullOrEmpty(result.RefreshToken));

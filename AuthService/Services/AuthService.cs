@@ -18,10 +18,12 @@ namespace AuthService.Services
         IUserRepository userRepository,
         ITokenRepository tokenRepository,
         IRabbitMqProducerService rabbitMqProducerService,
-        IOptions<JwtSettings> jwtOptions) : IAuthService
+        IOptions<JwtSettings> jwtOptions,
+        IHttpContextAccessor httpContextAccessor) : IAuthService
     {
         private readonly IUserRepository userRepository = userRepository;
         private readonly ITokenRepository tokenRepository = tokenRepository;
+        private readonly IHttpContextAccessor httpContextAccessor = httpContextAccessor;
         private readonly IRabbitMqProducerService rabbitMqProducerService = rabbitMqProducerService;
         private readonly IOptions<JwtSettings> jwtOptions = jwtOptions;
         private bool disposed = false;
@@ -36,6 +38,13 @@ namespace AuthService.Services
             var refreshToken = await tokenRepository.CreateAsync(GenerateRefreshToken(user));
             await tokenRepository.SaveAsync();
 
+            httpContextAccessor?.HttpContext?.Response.Cookies.Append(nameof(RefreshToken).ToUpper(), refreshToken.Token, new()
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Expires = refreshToken.Expires
+            });
 
             return new AuthResponseDto()
             {
@@ -77,8 +86,13 @@ namespace AuthService.Services
             });
         }
 
-        public async Task LogoutAsync(string token)
+        public async Task LogoutAsync()
         {
+            (var request, var response) = GetRequestAndResponse();
+
+            if (!request.Cookies.TryGetValue(nameof(AuthResponseDto.RefreshToken).ToUpper(), out var token))
+                throw new SecurityTokenException("Invalid refresh token provided");
+
             var refreshToken = await tokenRepository.GetByTokenAsync(token) ??
                 throw new SecurityTokenException("Invalid refresh token provided");
 
@@ -86,10 +100,17 @@ namespace AuthService.Services
             tokenRepository.Update(refreshToken);
 
             await tokenRepository.SaveAsync();
+
+            response.Cookies.Delete(nameof(AuthResponseDto.RefreshToken).ToUpper());
         }
 
-        public async Task<AuthResponseDto> RefreshAsync(string token)
+        public async Task<AuthResponseDto> RefreshAsync()
         {
+            (var request, var response) = GetRequestAndResponse();
+
+            if (!request.Cookies.TryGetValue(nameof(AuthResponseDto.RefreshToken).ToUpper(), out var token))
+                throw new SecurityTokenException("No refresh token provided");
+
             if (string.IsNullOrEmpty(token))
                 throw new SecurityTokenException("No refresh token provided");
 
@@ -107,7 +128,6 @@ namespace AuthService.Services
                 throw new SecurityTokenException("Refresh token expired");
             }
 
-
             var user = refreshToken.User ??
                 throw new SecurityTokenException("Invalid refresh token provided");
 
@@ -117,12 +137,29 @@ namespace AuthService.Services
             refreshToken = await tokenRepository.CreateAsync(GenerateRefreshToken(user));
             await tokenRepository.SaveAsync();
 
+            response.Cookies.Append(nameof(RefreshToken).ToUpper(), refreshToken.Token, new()
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Expires = refreshToken.Expires
+            });
+
             return new AuthResponseDto()
             {
                 AccessToken = GenerateJwtToken(user),
                 RefreshToken = refreshToken.Token,
                 RefreshTokenExpiration = refreshToken.Expires
             };
+        }
+
+        private (HttpRequest, HttpResponse) GetRequestAndResponse()
+        {
+            if (httpContextAccessor is not null && httpContextAccessor.HttpContext is not null)
+            {
+                return (httpContextAccessor.HttpContext.Request, httpContextAccessor.HttpContext.Response);
+            }
+            throw new InvalidOperationException("HttpContextAccessor is not set");
         }
 
         private string GenerateJwtToken(User user)

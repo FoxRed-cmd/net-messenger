@@ -6,7 +6,7 @@ namespace AuthService.Services
     {
         Task RegisterAsync(RegisterRequestDto registerRequestDto);
         Task<AuthResponseDto> LoginAsync(LoginRequestDto loginRequestDto);
-        Task<AuthResponseDto> RefreshAsync(string token);
-        Task LogoutAsync(string token);
+        Task<AuthResponseDto> RefreshAsync();
+        Task LogoutAsync();
     }
 }
