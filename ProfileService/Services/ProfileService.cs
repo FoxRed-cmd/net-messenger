@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Mapster;
 using ProfileService.Entities;
 using ProfileService.Entities.DTO;
+using ProfileService.Exceptions;
 using ProfileService.Repositories;
 
 namespace ProfileService.Services
@@ -40,7 +41,7 @@ namespace ProfileService.Services
         {
             var profileRepository = GetProfileRepository();
 
-            var profile = await profileRepository.GetByIdAsync(id) ?? throw new Exception("Profile not found");
+            var profile = await profileRepository.GetByIdAsync(id) ?? throw new EntityNotFoundException("Profile not found");
 
             scope?.Dispose();
 
@@ -50,7 +51,7 @@ namespace ProfileService.Services
         public async Task<IEnumerable<ProfileDto>> FindProfileAsync(string query)
         {
             if (string.IsNullOrEmpty(query))
-                throw new Exception("Query is empty");
+                throw new ArgumentException("Query is empty");
 
             var profileRepository = GetProfileRepository();
 
@@ -64,7 +65,7 @@ namespace ProfileService.Services
         public async Task<ProfileDto> GetProfileByUserNameAsync(string userName)
         {
             if (string.IsNullOrEmpty(userName))
-                throw new Exception("Username is empty");
+                throw new ArgumentException("Username is empty");
 
             var profileRepository = GetProfileRepository();
 
@@ -78,7 +79,7 @@ namespace ProfileService.Services
         public async Task<ProfileDto> GetProfileByEmailAsync(string email)
         {
             if (string.IsNullOrEmpty(email))
-                throw new Exception("Email is empty");
+                throw new ArgumentException("Email is empty");
 
             var profileRepository = GetProfileRepository();
 
@@ -96,20 +97,20 @@ namespace ProfileService.Services
             var userId = GetUserId();
 
             var profile = await profileRepository.GetByIdAsync(userId)
-                ?? throw new Exception("Profile not found");
+                ?? throw new EntityNotFoundException("Profile not found");
 
             if (!profile.Email.Equals(newProfileDto.Email))
             {
                 var emailExists = await profileRepository.GetByEmailAsync(newProfileDto.Email) != null;
                 if (emailExists)
-                    throw new Exception("Email already exists");
+                    throw new EmailOrUsernameAlreadyExistsException("Email already exists");
             }
 
             if (!profile.UserName.Equals(newProfileDto.UserName))
             {
                 var userNameExists = await profileRepository.GetByUserNameAsync(newProfileDto.UserName) != null;
                 if (userNameExists)
-                    throw new Exception("Username already exists");
+                    throw new EmailOrUsernameAlreadyExistsException("Username already exists");
             }
 
             newProfileDto.Adapt(profile);

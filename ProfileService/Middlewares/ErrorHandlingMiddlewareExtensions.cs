@@ -1,4 +1,4 @@
-namespace AuthService.Middleware
+namespace ProfileService.Middlewares
 {
     public static class ErrorHandlingMiddlewareExtensions
     {

@@ -1,8 +1,8 @@
 using System.Text.Json;
-using AuthService.Exceptions;
+using ProfileService.Exceptions;
 using Microsoft.IdentityModel.Tokens;
 
-namespace AuthService.Middleware
+namespace ProfileService.Middlewares
 {
     public class ErrorHandlingMiddleware(RequestDelegate next)
     {
@@ -14,7 +14,7 @@ namespace AuthService.Middleware
             {
                 await next(context);
             }
-            catch (UserAlreadyExistException ex)
+            catch (EmailOrUsernameAlreadyExistsException ex)
             {
                 context.Response.StatusCode = StatusCodes.Status400BadRequest;
                 context.Response.ContentType = "application/json";
@@ -22,16 +22,6 @@ namespace AuthService.Middleware
                 {
                     error = ex.Message,
                     status = StatusCodes.Status400BadRequest
-                }));
-            }
-            catch (IncorrectLoginOrPasswordException ex)
-            {
-                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                context.Response.ContentType = "application/json";
-                await context.Response.WriteAsync(JsonSerializer.Serialize(new
-                {
-                    error = ex.Message,
-                    status = StatusCodes.Status401Unauthorized
                 }));
             }
             catch (EntityNotFoundException ex)
@@ -42,16 +32,6 @@ namespace AuthService.Middleware
                 {
                     error = ex.Message,
                     status = StatusCodes.Status404NotFound
-                }));
-            }
-            catch (SecurityTokenException ex)
-            {
-                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                context.Response.ContentType = "application/json";
-                await context.Response.WriteAsync(JsonSerializer.Serialize(new
-                {
-                    error = ex.Message,
-                    status = StatusCodes.Status401Unauthorized
                 }));
             }
             catch (Exception ex)

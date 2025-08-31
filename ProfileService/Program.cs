@@ -1,5 +1,6 @@
 using ProfileService.Configs;
 using ProfileService.Data;
+using ProfileService.Middlewares;
 using ProfileService.Repositories;
 using ProfileService.Services;
 using Scalar.AspNetCore;
@@ -26,6 +27,8 @@ builder.Services.AddSingleton<IProfileService, ProfileService.Services.ProfileSe
 builder.Services.AddHostedService<RabbitMqConsumerService>();
 
 var app = builder.Build();
+
+app.UseErrorHandlingMiddleware();
 
 app.UseAuthentication();
 app.UseAuthorization();

@@ -1,6 +1,6 @@
 using AuthService.Configs;
 using AuthService.Data;
-using AuthService.Middleware;
+using AuthService.Middlewares;
 using AuthService.Repositories;
 using AuthService.Services;
 using Scalar.AspNetCore;
