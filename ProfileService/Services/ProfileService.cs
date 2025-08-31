@@ -30,6 +30,12 @@ namespace ProfileService.Services
             scope?.Dispose();
         }
 
+        public async Task<ProfileDto> GetProfileAfterLogin()
+        {
+            var userId = GetUserId();
+            return await GetProfileByIdAsync(userId);
+        }
+
         public async Task<ProfileDto> GetProfileByIdAsync(Guid id)
         {
             var profileRepository = GetProfileRepository();
@@ -87,10 +93,9 @@ namespace ProfileService.Services
         {
             var profileRepository = GetProfileRepository();
 
-            var userId = httpContextAccessor?.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                ?? throw new UnauthorizedAccessException();
+            var userId = GetUserId();
 
-            var profile = await profileRepository.GetByIdAsync(Guid.Parse(userId))
+            var profile = await profileRepository.GetByIdAsync(userId)
                 ?? throw new Exception("Profile not found");
 
             if (!profile.Email.Equals(newProfileDto.Email))
@@ -119,6 +124,18 @@ namespace ProfileService.Services
         {
             scope = scopeFactory.CreateScope();
             return scope.ServiceProvider.GetRequiredService<IProfileRepository>();
+        }
+
+        private Guid GetUserId()
+        {
+            if (httpContextAccessor is not null && httpContextAccessor.HttpContext is not null)
+            {
+                var userId = httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                    ?? throw new UnauthorizedAccessException();
+
+                return Guid.Parse(userId);
+            }
+            throw new InvalidOperationException("HttpContextAccessor is not set");
         }
     }
 }

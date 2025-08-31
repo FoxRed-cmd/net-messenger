@@ -19,10 +19,10 @@ namespace ProfileService.Controllers
         }
 
         [Authorize]
-        [HttpGet("{email}")]
-        public async Task<IResult> GetProfileByUserName([FromRoute] string email)
+        [HttpGet("login")]
+        public async Task<IResult> GetProfileAfterLogin()
         {
-            var profile = await profileService.GetProfileByEmailAsync(email);
+            var profile = await profileService.GetProfileAfterLogin();
             return Results.Json(profile, statusCode: 200);
         }
 

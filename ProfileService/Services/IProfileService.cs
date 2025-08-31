@@ -5,6 +5,7 @@ namespace ProfileService.Services
     public interface IProfileService
     {
         Task CreateProfileAsync(CreateProfileDto profileDto);
+        Task<ProfileDto> GetProfileAfterLogin();
         Task<ProfileDto> GetProfileByIdAsync(Guid id);
         Task<ProfileDto> GetProfileByEmailAsync(string email);
         Task<ProfileDto> GetProfileByUserNameAsync(string userName);

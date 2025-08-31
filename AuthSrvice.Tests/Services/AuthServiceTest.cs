@@ -21,7 +21,7 @@ namespace AuthSrvice.Tests.Services
         private readonly Mock<ITokenRepository> tokenRepositoryMock = new();
         private readonly Mock<IRabbitMqProducerService> producerServiceMock = new();
         private readonly Mock<IOptions<JwtSettings>> jwtSettingsMock = new();
-        private readonly Mock<IHttpContextAccessor> httpContextAccessor = new();
+        private readonly Mock<IHttpContextAccessor> httpContextAccessorMock = new();
 
         private readonly AuthService.Services.AuthService authService;
 
@@ -32,7 +32,7 @@ namespace AuthSrvice.Tests.Services
                 tokenRepositoryMock.Object,
                 producerServiceMock.Object,
                 jwtSettingsMock.Object,
-                httpContextAccessor.Object);
+                httpContextAccessorMock.Object);
         }
         [Fact]
         public async Task RegisterAsync_ShouldCreateUser_WhenUserDoesNotExist()
@@ -143,7 +143,9 @@ namespace AuthSrvice.Tests.Services
         public async Task RefreshAsync_ShouldThrow_WhenRefreshTokenIsInvalid()
         {
             var refreshToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
+            var httpContext = new DefaultHttpContext();
 
+            httpContextAccessorMock.Setup(x => x.HttpContext).Returns(httpContext);
             tokenRepositoryMock.Setup(t => t.GetByTokenAsync(refreshToken)).ReturnsAsync(null as RefreshToken);
 
             await Assert.ThrowsAsync<SecurityTokenException>(() => authService.RefreshAsync());
@@ -153,7 +155,9 @@ namespace AuthSrvice.Tests.Services
         public async Task RefreshAsync_ShouldThrow_WhenRefreshTokenIsEmpty()
         {
             var refreshToken = string.Empty;
+            var httpContext = new DefaultHttpContext();
 
+            httpContextAccessorMock.Setup(x => x.HttpContext).Returns(httpContext);
             tokenRepositoryMock.Setup(t => t.GetByTokenAsync(refreshToken)).ReturnsAsync(null as RefreshToken);
 
             await Assert.ThrowsAsync<SecurityTokenException>(() => authService.RefreshAsync());
@@ -164,7 +168,9 @@ namespace AuthSrvice.Tests.Services
         {
             var refreshToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
             var user = new User() { Id = Guid.NewGuid(), Email = "test@example.com" };
+            var httpContext = new DefaultHttpContext();
 
+            httpContextAccessorMock.Setup(x => x.HttpContext).Returns(httpContext);
             tokenRepositoryMock.Setup(t => t.GetByTokenAsync(refreshToken)).ReturnsAsync(new RefreshToken()
             {
                 Token = refreshToken,
@@ -183,7 +189,9 @@ namespace AuthSrvice.Tests.Services
         {
             var refreshToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
             var user = new User() { Id = Guid.NewGuid(), Email = "test@example.com" };
+            var httpContext = new DefaultHttpContext();
 
+            httpContextAccessorMock.Setup(x => x.HttpContext).Returns(httpContext);
             tokenRepositoryMock.Setup(t => t.GetByTokenAsync(refreshToken)).ReturnsAsync(new RefreshToken()
             {
                 Token = refreshToken,
@@ -202,7 +210,9 @@ namespace AuthSrvice.Tests.Services
         {
             var refreshToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
             var user = new User() { Id = Guid.NewGuid(), Email = "test@example.com" };
+            var httpContext = new DefaultHttpContext();
 
+            httpContextAccessorMock.Setup(x => x.HttpContext).Returns(httpContext);
             tokenRepositoryMock.Setup(t => t.GetByTokenAsync(refreshToken)).ReturnsAsync(new RefreshToken()
             {
                 Token = refreshToken,
@@ -245,7 +255,10 @@ namespace AuthSrvice.Tests.Services
         {
             var refreshToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
             var user = new User() { Id = Guid.NewGuid(), Email = "test@example.com" };
+            var httpContext = new DefaultHttpContext();
+            httpContext.Request.Headers.Cookie = $"REFRESHTOKEN={refreshToken}";
 
+            httpContextAccessorMock.Setup(x => x.HttpContext).Returns(httpContext);
             tokenRepositoryMock.Setup(t => t.GetByTokenAsync(refreshToken)).ReturnsAsync(new RefreshToken()
             {
                 Token = refreshToken,
