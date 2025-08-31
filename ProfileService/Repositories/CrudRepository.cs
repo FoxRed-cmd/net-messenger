@@ -17,6 +17,11 @@ namespace ProfileService.Repositories
             return await dbSet.FindAsync(id);
         }
 
+        public void Update(T entity)
+        {
+            context.Entry(entity).State = EntityState.Modified;
+        }
+
         public async Task SaveAsync() => await context.SaveChangesAsync();
     }
 }

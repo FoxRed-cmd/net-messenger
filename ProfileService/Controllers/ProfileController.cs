@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ProfileService.Entities.DTO;
 
 namespace ProfileService.Controllers
 {
@@ -18,11 +19,19 @@ namespace ProfileService.Controllers
         }
 
         [Authorize]
-        [HttpGet("{userName}")]
-        public async Task<IResult> GetProfileByUserName([FromRoute] string userName)
+        [HttpGet("{email}")]
+        public async Task<IResult> GetProfileByUserName([FromRoute] string email)
         {
-            var profile = await profileService.GetProfileByUserNameAsync(userName);
+            var profile = await profileService.GetProfileByEmailAsync(email);
             return Results.Json(profile, statusCode: 200);
+        }
+
+        [Authorize]
+        [HttpPut("update")]
+        public async Task<IResult> UpdateProfile([FromBody] UpdateProfileDto profileDto)
+        {
+            await profileService.UpdateProfileAsync(profileDto);
+            return Results.Ok("Profile updated successfully");
         }
     }
 }

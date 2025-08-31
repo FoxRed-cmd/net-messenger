@@ -17,6 +17,7 @@ builder.Services.AddOpenApi();
 builder.Services.Configure<RabbitMqSettings>(builder.Configuration.GetSection("RabbitMq"));
 
 builder.Services.AddDbContext<ProfileDbContext>();
+builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddScoped(typeof(ICrudRepository<,>), typeof(CrudRepository<,>));
 builder.Services.AddScoped<IProfileRepository, ProfileRepository>();

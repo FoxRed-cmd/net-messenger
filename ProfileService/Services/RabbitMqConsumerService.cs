@@ -57,9 +57,16 @@ namespace ProfileService.Services
                 {
                     var body = ea.Body.ToArray();
                     var message = Encoding.UTF8.GetString(body);
-                    var evt = JsonSerializer.Deserialize<UserRegisteredEvent>(message);
+                    var evt = JsonSerializer.Deserialize<UserRegisteredEvent>(message)
+                        ?? throw new InvalidOperationException("Received message is not UserRegisteredEvent.");
 
-                    await profileService.CreateProfileAsync(evt ?? throw new(nameof(evt)));
+                    await profileService.CreateProfileAsync(new CreateProfileDto()
+                    {
+                        Id = evt.Id,
+                        FullName = string.Empty,
+                        Email = evt.Email,
+                        UserName = string.Empty
+                    });
 
                     // подтверждаем что сообщение обработано
                     await channel.BasicAckAsync(ea.DeliveryTag, multiple: false);
