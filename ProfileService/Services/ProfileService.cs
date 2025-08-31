@@ -99,13 +99,6 @@ namespace ProfileService.Services
             var profile = await profileRepository.GetByIdAsync(userId)
                 ?? throw new EntityNotFoundException("Profile not found");
 
-            if (!profile.Email.Equals(newProfileDto.Email))
-            {
-                var emailExists = await profileRepository.GetByEmailAsync(newProfileDto.Email) != null;
-                if (emailExists)
-                    throw new EmailOrUsernameAlreadyExistsException("Email already exists");
-            }
-
             if (!profile.UserName.Equals(newProfileDto.UserName))
             {
                 var userNameExists = await profileRepository.GetByUserNameAsync(newProfileDto.UserName) != null;

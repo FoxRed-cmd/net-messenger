@@ -3,9 +3,7 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Options;
 using ProfileService.Configs;
-using ProfileService.Entities;
 using ProfileService.Entities.DTO;
-using ProfileService.Repositories;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
